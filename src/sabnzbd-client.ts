@@ -1,3 +1,5 @@
+import { logger } from "./logger.js";
+
 export interface SabnzbdConfig {
   baseUrl: string;
   apiKey: string;
@@ -16,18 +18,36 @@ export class SabnzbdClient {
       url.searchParams.set(key, String(value));
     }
 
-    const res = await fetch(url.toString());
+    // Log without exposing the API key
+    logger.debug(`SABnzbd → mode=${mode}`, Object.keys(params).length ? params : undefined);
+
+    const start = Date.now();
+    let res: Response;
+
+    try {
+      res = await fetch(url.toString());
+    } catch (err) {
+      logger.error(`SABnzbd request failed (mode=${mode})`, err);
+      throw err;
+    }
+
+    const elapsed = Date.now() - start;
+
     if (!res.ok) {
       const text = await res.text().catch(() => res.statusText);
+      logger.error(`SABnzbd HTTP ${res.status} (mode=${mode}, ${elapsed}ms)`, text);
       throw new Error(`${res.status} ${res.statusText}: ${text}`);
     }
 
     const data = await res.json() as Record<string, unknown>;
 
     if (data.status === false) {
-      throw new Error(`SABnzbd error: ${data.error ?? "unknown error"}`);
+      const msg = `SABnzbd error: ${data.error ?? "unknown error"}`;
+      logger.error(`SABnzbd API error (mode=${mode}, ${elapsed}ms)`, data.error);
+      throw new Error(msg);
     }
 
+    logger.debug(`SABnzbd ← mode=${mode} (${elapsed}ms)`);
     return data as T;
   }
 
