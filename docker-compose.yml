@@ -22,10 +22,10 @@ services:
     environment:
       <<: *sabnzbd-env
       MCP_TRANSPORT: http
-      MCP_PORT: ${MCP_PORT:-3000}
+      MCP_PORT: ${MCP_PORT:-3001}
       MCP_HOST: 0.0.0.0
     ports:
-      - "${MCP_PORT:-3000}:${MCP_PORT:-3000}"
+      - "${MCP_PORT:-3001}:${MCP_PORT:-3001}"
     restart: unless-stopped
     profiles:
       - http

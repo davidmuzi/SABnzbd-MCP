@@ -46,7 +46,7 @@ docker run -d \
   -e SABNZBD_URL=http://your-sabnzbd:8080 \
   -e SABNZBD_API_KEY=your_api_key \
   -e MCP_TRANSPORT=http \
-  -p 3000:3000 \
+  -p 3001:3001 \
   ghcr.io/ltmarx/sabnzbd-mcp:latest
 ```
 

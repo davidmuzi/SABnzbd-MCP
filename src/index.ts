@@ -10,7 +10,7 @@ import { logger } from "./logger.js";
 const SABNZBD_URL = process.env.SABNZBD_URL ?? "http://localhost:8080";
 const SABNZBD_API_KEY = process.env.SABNZBD_API_KEY ?? "";
 const MCP_TRANSPORT = process.env.MCP_TRANSPORT ?? "stdio";
-const MCP_PORT = parseInt(process.env.MCP_PORT ?? "3000", 10);
+const MCP_PORT = parseInt(process.env.MCP_PORT ?? "3001", 10);
 const MCP_HOST = process.env.MCP_HOST ?? "0.0.0.0";
 
 if (!SABNZBD_API_KEY) {
