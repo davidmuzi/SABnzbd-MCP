@@ -1,0 +1,25 @@
+{
+  "name": "sabnzbd-mcp",
+  "version": "1.0.0",
+  "description": "An MCP server for SABnzbd",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "sabnzbd-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.3"
+  },
+  "license": "ISC"
+}

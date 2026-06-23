@@ -1,0 +1,31 @@
+x-sabnzbd-env: &sabnzbd-env
+  SABNZBD_URL: ${SABNZBD_URL:-http://localhost:8080}
+  SABNZBD_API_KEY: ${SABNZBD_API_KEY}
+
+services:
+  # stdio mode — launched by the MCP client directly (Claude Desktop)
+  sabnzbd-mcp-stdio:
+    build: .
+    image: ghcr.io/ltmarx/sabnzbd-mcp:latest
+    environment:
+      <<: *sabnzbd-env
+      MCP_TRANSPORT: stdio
+    stdin_open: true
+    tty: false
+    profiles:
+      - stdio
+
+  # HTTP mode — persistent server for remote MCP clients
+  sabnzbd-mcp-http:
+    build: .
+    image: ghcr.io/ltmarx/sabnzbd-mcp:latest
+    environment:
+      <<: *sabnzbd-env
+      MCP_TRANSPORT: http
+      MCP_PORT: ${MCP_PORT:-3000}
+      MCP_HOST: 0.0.0.0
+    ports:
+      - "${MCP_PORT:-3000}:${MCP_PORT:-3000}"
+    restart: unless-stopped
+    profiles:
+      - http
