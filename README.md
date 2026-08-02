@@ -83,8 +83,17 @@ docker compose --profile http up -d
 | `SABNZBD_URL` | `http://localhost:8080` | SABnzbd base URL |
 | `SABNZBD_API_KEY` | *(required)* | SABnzbd API key (Settings → General → API Key) |
 | `MCP_TRANSPORT` | `stdio` | Transport mode: `stdio` or `http` |
-| `MCP_PORT` | `3000` | HTTP port (only used when `MCP_TRANSPORT=http`) |
+| `MCP_PORT` | `3001` | HTTP port (only used when `MCP_TRANSPORT=http`) |
 | `MCP_HOST` | `0.0.0.0` | HTTP bind host (only used when `MCP_TRANSPORT=http`) |
+
+## Health check
+
+In HTTP mode the server exposes `GET /health`, which also verifies connectivity to SABnzbd:
+
+- `200 { "status": "ok", "sabnzbd": "reachable" }` — server up and SABnzbd responding
+- `503 { "status": "error", "sabnzbd": "unreachable" }` — server up but SABnzbd not reachable
+
+The Docker image and `docker-compose.yml` both wire this into a container `HEALTHCHECK` for the HTTP service (checked every 30s). stdio mode has no persistent server, so no health check applies there.
 
 ## Development
 
