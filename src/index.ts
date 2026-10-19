@@ -295,28 +295,64 @@ async function main() {
     logLevel: process.env.LOG_LEVEL ?? "INFO",
   });
 
-  const server = buildServer();
-
   if (MCP_TRANSPORT === "http") {
-    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-
     const httpServer = createServer(async (req, res) => {
       if (req.url === "/health") {
         try {
           await client.get("version");
           res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ status: "ok", sabnzbd: "reachable" }));
+          res.end(JSON.stringify({
+            status: "ok",
+            sabnzbd: "reachable"
+          }));
         } catch (err) {
           logger.warn("Health check failed: SABnzbd unreachable", err);
           res.writeHead(503, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ status: "error", sabnzbd: "unreachable" }));
+          res.end(JSON.stringify({
+            status: "error",
+            sabnzbd: "unreachable"
+          }));
         }
         return;
       }
 
       if (req.url === "/mcp") {
         logger.debug(`HTTP ${req.method} ${req.url}`);
-        await transport.handleRequest(req, res);
+
+        // Create a fresh server and transport per request.
+        const server = buildServer();
+
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: undefined,
+        });
+
+        try {
+          await server.connect(transport);
+          await transport.handleRequest(req, res);
+        } catch (err) {
+          logger.error("MCP request failed", err);
+
+          if (!res.headersSent) {
+            res.writeHead(500, {
+              "Content-Type": "application/json"
+            });
+            res.end(JSON.stringify({
+              jsonrpc: "2.0",
+              error: {
+                code: -32603,
+                message: "Internal server error"
+              },
+              id: null
+            }));
+          }
+        } finally {
+          res.once("close", () => {
+            void server.close().catch((err) => {
+              logger.error("Failed to close MCP server", err);
+            });
+          });
+        }
+
         return;
       }
 
@@ -325,14 +361,16 @@ async function main() {
       res.end();
     });
 
-    await server.connect(transport);
-
     httpServer.listen(MCP_PORT, MCP_HOST, () => {
       logger.info(`MCP endpoint: http://${MCP_HOST}:${MCP_PORT}/mcp`);
       logger.info(`Health check: http://${MCP_HOST}:${MCP_PORT}/health`);
     });
+
   } else {
+    // Keep stdio support unchanged.
+    const server = buildServer();
     const transport = new StdioServerTransport();
+
     await server.connect(transport);
     logger.info("MCP server connected via stdio");
   }
